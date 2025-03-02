@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juego de Multiplicaciones</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Animaciones */
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        .bounce { animation: bounce 0.5s; }
+
+        /* Confeti */
+        @keyframes confetti {
+            0% { transform: translateY(0) rotate(0); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #ff0;
+            animation: confetti 2s linear infinite;
+        }
+
+        /* Botón de música */
+        .music-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: rgba(255, 255, 255, 0.8);
+            border: 2px solid #4a5568;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 1000;
+        }
+        .music-button:hover {
+            background-color: rgba(255, 255, 255, 1);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-r from-blue-400 to-purple-500 min-h-screen flex flex-col items-center justify-center p-4">
+    <!-- Botón de música -->
+    <div id="musicButton" class="music-button">
+        <span id="musicIcon">🎵</span>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-2xl p-8 max-w-md w-full text-center relative">
+        <h1 class="text-4xl font-bold text-purple-800 mb-6">¡Aprende Multiplicaciones!</h1>
+        <div id="question" class="text-3xl font-bold text-gray-800 mb-6">2 x 3 = ?</div>
+        <input id="answer" type="number" class="w-full p-3 border-2 border-purple-300 rounded-lg text-2xl text-center mb-6 focus:outline-none focus:border-purple-500" placeholder="Tu respuesta">
+        <button id="submit" class="w-full bg-purple-600 text-white text-2xl font-bold py-3 rounded-lg hover:bg-purple-700 transition-colors">Enviar</button>
+        <div id="feedback" class="mt-6 text-2xl font-bold"></div>
+        <div class="mt-6 text-xl text-gray-700">
+            <span>Aciertos: <span id="correct">0</span></span>
+            <span class="ml-4">Errores: <span id="wrong">0</span></span>
+        </div>
+        <button id="reset" class="mt-6 w-full bg-gray-500 text-white text-xl font-bold py-2 rounded-lg hover:bg-gray-600 transition-colors">Reiniciar</button>
+    </div>
+
+    <!-- Sonidos -->
+    <audio id="correctSound" src="https://assets.mixkit.co/active_storage/sfx/2401/2401-preview.mp3"></audio>
+    <audio id="wrongSound" src="https://assets.mixkit.co/active_storage/sfx/2400/2400-preview.mp3"></audio>
+
+    <!-- Música de fondo -->
+    <audio id="backgroundMusic" loop>
+        <source src="https://assets.mixkit.co/music/preview/mixkit-happy-children-138.mp3" type="audio/mpeg">
+        Tu navegador no soporta el elemento de audio.
+    </audio>
+
+    <script>
+        // Variables globales
+        let correctAnswers = 0;
+        let wrongAnswers = 0;
+        let totalQuestions = 0;
+        let num1, num2;
+
+        // Generar una nueva multiplicación
+        function generateQuestion() {
+            num1 = Math.floor(Math.random() * 9) + 1;
+            num2 = Math.floor(Math.random() * 9) + 1;
+            document.getElementById('question').textContent = `${num1} x ${num2} = ?`;
+            document.getElementById('answer').value = '';
+            document.getElementById('feedback').textContent = '';
+        }
+
+        // Validar la respuesta del usuario
+        function checkAnswer() {
+            const userAnswer = parseInt(document.getElementById('answer').value);
+            const correctAnswer = num1 * num2;
+
+            if (userAnswer === correctAnswer) {
+                correctAnswers++;
+                document.getElementById('correct').textContent = correctAnswers;
+                document.getElementById('feedback').textContent = '¡Correcto! ????';
+                document.getElementById('feedback').classList.add('text-green-500', 'bounce');
+                document.getElementById('correctSound').play();
+                createConfetti();
+            } else {
+                wrongAnswers++;
+                document.getElementById('wrong').textContent = wrongAnswers;
+                document.getElementById('feedback').textContent = `Incorrecto ???? La respuesta era ${correctAnswer}.`;
+                document.getElementById('feedback').classList.add('text-red-500', 'bounce');
+                document.getElementById('wrongSound').play();
+            }
+
+            // Eliminar animación después de un tiempo
+            setTimeout(() => {
+                document.getElementById('feedback').classList.remove('bounce');
+            }, 500);
+
+            totalQuestions++;
+            if (totalQuestions >= 10) {
+                endGame();
+            } else {
+                generateQuestion();
+            }
+        }
+
+        // Crear efecto de confeti
+        function createConfetti() {
+            for (let i = 0; i < 50; i++) {
+                const confetti = document.createElement('div');
+                confetti.classList.add('confetti');
+                confetti.style.left = `${Math.random() * 100}%`;
+                confetti.style.animationDelay = `${Math.random() * 2}s`;
+                confetti.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
+                document.body.appendChild(confetti);
+                setTimeout(() => confetti.remove(), 2000);
+            }
+        }
+
+        // Finalizar el juego después de 10 preguntas
+        function endGame() {
+            alert(`¡Felicidades! Has completado 10 preguntas.\nAciertos: ${correctAnswers}\nErrores: ${wrongAnswers}`);
+            resetGame();
+        }
+
+        // Reiniciar el juego
+        function resetGame() {
+            correctAnswers = 0;
+            wrongAnswers = 0;
+            totalQuestions = 0;
+            document.getElementById('correct').textContent = 0;
+            document.getElementById('wrong').textContent = 0;
+            generateQuestion();
+        }
+
+        // Control de música
+        const backgroundMusic = document.getElementById('backgroundMusic');
+        const musicButton = document.getElementById('musicButton');
+        const musicIcon = document.getElementById('musicIcon');
+
+        musicButton.addEventListener('click', () => {
+            if (backgroundMusic.paused) {
+                backgroundMusic.play();
+                musicIcon.textContent = '🎵';
+            } else {
+                backgroundMusic.pause();
+                musicIcon.textContent = '🔇';
+            }
+        });
+
+        // Reproducir música automáticamente al cargar la página
+        backgroundMusic.play();
+
+        // Eventos
+        document.getElementById('submit').addEventListener('click', checkAnswer);
+        document.getElementById('reset').addEventListener('click', resetGame);
+        document.getElementById('answer').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') checkAnswer();
+        });
+
+        // Iniciar el juego
+        generateQuestion();
+    </script>
+
+    <!-- Instrucciones de uso -->
+    <!--
+        1. Abre este archivo en un navegador web.
+        2. Resuelve la multiplicación que aparece en pantalla.
+        3. Ingresa tu respuesta en el campo de texto y presiona "Enviar" o la tecla "Enter".
+        4. Recibirás retroalimentación inmediata sobre si tu respuesta es correcta o incorrecta.
+        5. Después de 10 preguntas, el juego se reiniciará automáticamente.
+        6. Puedes reiniciar el juego en cualquier momento presionando el botón "Reiniciar".
+        7. Usa el botón de música en la esquina superior derecha para activar o desactivar la música de fondo.
+    -->
+</body>
+</html>
